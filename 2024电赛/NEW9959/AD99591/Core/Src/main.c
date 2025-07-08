@@ -145,6 +145,9 @@ void Set_Output_Frequencies(float32_t freq1, float32_t freq2, uint8_t type1, uin
 void Set_Output_Amplitudes(void);
 float32_t Find_Nearest_Multiple(float32_t freq, float32_t step);
 
+// 新增混合信号相位调整函数
+void AdjustMixedSignalPhase(uint8_t type1, uint8_t type2);
+
 // TJC screen functions
 void TJC_SendCmd(const char* cmd);
 void TJC_Init(void);
@@ -154,7 +157,10 @@ void TJC_UpdateFFTData(void);
 // AD9959 PLL和同步函数
 void AD9959_ConfigurePLL(uint8_t multiplier);
 void AD9959_WriteRegister(uint8_t reg, uint8_t *data, uint8_t length);
-void AD9959_ResetAllPhases(void);
+/**
+  * @brief  重置使用的AD9959通道的相位
+  */
+void AD9959_ResetUsedPhases(void);
 void AD9959_SynchronizeChannels(void);
 void AD9959_EnableSyncMode(void);
 
@@ -219,7 +225,7 @@ int main(void)
   AD9959_EnableSyncMode();
   
   // 重置所有相位以保持一致
-  AD9959_ResetAllPhases();
+  AD9959_ResetUsedPhases();
   
   // Set initial amplitude
   ad9959_write_amplitude(AD9959_CHANNEL_0, 1023); // Set max amplitude
@@ -483,13 +489,20 @@ void Detect_Wave_Type(void)
   */
 void Set_Output_Frequencies(float32_t freq1, float32_t freq2, uint8_t type1, uint8_t type2)
 {
+    static uint16_t triangle_phase_offset = 0; // 保存三角波相位偏移量
+    
     // 输出第一个信号(信号A - 用作触发源)
     if (type1 == WAVE_TRIANGLE) {
         // 使用AD9834生成三角波
         AD9834_Init();
         AD9834_SetFrequency(FREQ_REG_0, (uint32_t)freq1, TRIANGLE_WAVE);
+        
         // 重置相位确保稳定触发
         AD9834_Reset();
+        
+        // 设置固定的初始相位，确保每次重新配置时相位一致
+        AD9834_SetPhase(PHASE_REG_0, 0);
+        
         AD9834_EnableOutput();
     } else {
         // 使用AD9959生成正弦波 - 通道0作为主控通道
@@ -506,19 +519,56 @@ void Set_Output_Frequencies(float32_t freq1, float32_t freq2, uint8_t type1, uin
         // 使用AD9834生成三角波
         AD9834_Init();
         AD9834_SetFrequency(FREQ_REG_0, (uint32_t)freq2, TRIANGLE_WAVE);
+        
+        // 计算相位偏移以与信号A同步
+        // 如果信号A是正弦波，则需要调整三角波的相位以匹配
+        if (type1 == WAVE_SINE) {
+            // 对于不同频率，相位偏移需要不同的调整
+            // 这里使用频率比例来调整相位
+            float32_t freq_ratio = freq2 / freq1;
+            
+            // 计算相位偏移，范围0-4095，对应0-360度
+            // 可以根据实际测试结果调整这个计算公式
+            triangle_phase_offset = (uint16_t)(2048 * freq_ratio) % 4096;
+            
+            // 设置三角波相位
+            AD9834_SetPhase(PHASE_REG_0, triangle_phase_offset);
+        } else {
+            // 如果两个都是三角波，可以设置固定相位差或零相位差
+            AD9834_SetPhase(PHASE_REG_0, 0);
+        }
     } else {
         // 使用AD9959生成正弦波
         ad9959_write_frequency(AD9959_CHANNEL_1, (uint32_t)freq2);
+        
         // 为同步显示维持与通道0的相位关系
-        ad9959_reset_phase(AD9959_CHANNEL_1);
+        ad9959_reset_phase((AD9959_CHANNEL)1);
+        
+        // 如果信号A是三角波，需要调整正弦波相位以匹配三角波
+        if (type1 == WAVE_TRIANGLE) {
+            // 计算相位偏移，范围0-16383，对应0-360度
+            // 可以根据实际测试结果调整这个值
+            uint16_t sine_phase_offset = 4096; // 约90度相位差，可根据测试调整
+            
+            // 设置正弦波相位
+            ad9959_write_phase((AD9959_CHANNEL)1, sine_phase_offset);
+        }
     }
     
-    // 同步所有通道 - 确保相位对齐
-    AD9959_SynchronizeChannels();
-    
-    // 如果两个信号都使用AD9959，启动相位跟踪
+    // 如果两个信号都使用AD9959，同步所有通道并启动相位跟踪
     if (type1 == WAVE_SINE && type2 == WAVE_SINE) {
+        AD9959_SynchronizeChannels();
         StartPhaseTracking();
+    }
+    
+    // 如果混合使用AD9959和AD9834，可以通过测量相位差来微调
+    if ((type1 == WAVE_SINE && type2 == WAVE_TRIANGLE) || 
+        (type1 == WAVE_TRIANGLE && type2 == WAVE_SINE)) {
+        // 等待信号稳定
+        HAL_Delay(5);
+        
+        // 调用相位校准函数
+        AdjustMixedSignalPhase(type1, type2);
     }
 }
 
@@ -750,15 +800,17 @@ void AD9959_WriteRegister(uint8_t reg, uint8_t *data, uint8_t length)
 }
 
 /**
-  * @brief  重置所有AD9959通道的相位
+  * @brief  重置使用的AD9959通道的相位
   */
-void AD9959_ResetAllPhases(void)
+void AD9959_ResetUsedPhases(void)
 {
-    // 重置所有通道的相位
-    ad9959_reset_phase(AD9959_CHANNEL_0);
-    ad9959_reset_phase(AD9959_CHANNEL_1);
-    ad9959_reset_phase(AD9959_CHANNEL_2);
-    ad9959_reset_phase(AD9959_CHANNEL_3);
+    // 只重置我们实际使用的两个通道的相位
+    ad9959_reset_phase((AD9959_CHANNEL)0);  // 通道0 - 信号A
+    ad9959_reset_phase((AD9959_CHANNEL)1);  // 通道1 - 信号B
+    
+    // 不再重置未使用的通道2和通道3
+    // ad9959_reset_phase((AD9959_CHANNEL)2);
+    // ad9959_reset_phase((AD9959_CHANNEL)3);
 }
 
 /**
@@ -767,7 +819,7 @@ void AD9959_ResetAllPhases(void)
 void AD9959_SynchronizeChannels(void)
 {
     // 先重置所有通道相位
-    AD9959_ResetAllPhases();
+    AD9959_ResetUsedPhases();
     
     // 同时重置DDS核心以同步
     ad9959_reset();
@@ -975,7 +1027,7 @@ void AdjustPhaseBasedOnPLL(float32_t phaseError)
     phase_adjustment = (uint16_t)((phaseError * proportional + integral_error * integral) * PHASE_ADJUST_FACTOR);
     
     // 将相位调整应用到通道1
-    ad9959_write_phase(AD9959_CHANNEL_1, phase_adjustment);
+    ad9959_write_phase((AD9959_CHANNEL)1, phase_adjustment);
     
     // 检查PLL是否锁定(相位误差较小)
     if (fabsf(phaseError) < MAX_PHASE_ERROR) {
@@ -1043,6 +1095,104 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 AdjustPhaseBasedOnPLL(current_phase_error);
             }
         }
+    }
+}
+
+/**
+  * @brief  调整混合信号源(AD9959和AD9834)的相位关系
+  * @param  type1: 信号A的波形类型
+  * @param  type2: 信号B的波形类型
+  */
+void AdjustMixedSignalPhase(uint8_t type1, uint8_t type2)
+{
+    // 定义采样缓冲区
+    #define MIXED_SAMPLE_SIZE 32
+    static uint16_t signal_a[MIXED_SAMPLE_SIZE];
+    static uint16_t signal_b[MIXED_SAMPLE_SIZE];
+    
+    // 采集两个通道的信号
+    for(uint8_t i = 0; i < MIXED_SAMPLE_SIZE; i++) {
+        // 采样信号A (ADC通道0)
+        ADC_ChannelConfTypeDef sConfig = {0};
+        sConfig.Channel = ADC_CHANNEL_0;
+        sConfig.Rank = 1;
+        sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+        HAL_ADC_ConfigChannel(&hadc2, &sConfig);
+        
+        HAL_ADC_Start(&hadc2);
+        HAL_ADC_PollForConversion(&hadc2, 10);
+        signal_a[i] = HAL_ADC_GetValue(&hadc2);
+        HAL_ADC_Stop(&hadc2);
+        
+        // 采样信号B (ADC通道1)
+        sConfig.Channel = ADC_CHANNEL_1;
+        HAL_ADC_ConfigChannel(&hadc2, &sConfig);
+        
+        HAL_ADC_Start(&hadc2);
+        HAL_ADC_PollForConversion(&hadc2, 10);
+        signal_b[i] = HAL_ADC_GetValue(&hadc2);
+        HAL_ADC_Stop(&hadc2);
+        
+        // 短延时确保采样率一致
+        __NOP(); __NOP(); __NOP(); __NOP();
+    }
+    
+    // 计算信号的过零点
+    int32_t zc_index_a = -1;
+    int32_t zc_index_b = -1;
+    
+    // 查找信号A的上升过零点
+    for(uint8_t i = 1; i < MIXED_SAMPLE_SIZE; i++) {
+        if(signal_a[i-1] < 2048 && signal_a[i] >= 2048) {
+            zc_index_a = i;
+            break;
+        }
+    }
+    
+    // 查找信号B的上升过零点
+    for(uint8_t i = 1; i < MIXED_SAMPLE_SIZE; i++) {
+        if(signal_b[i-1] < 2048 && signal_b[i] >= 2048) {
+            zc_index_b = i;
+            break;
+        }
+    }
+    
+    // 如果找到了两个过零点，计算相位差
+    if(zc_index_a >= 0 && zc_index_b >= 0) {
+        // 使用线性插值提高过零点精度
+        float32_t precise_zc_a = zc_index_a - 1.0f + 
+                               (2048.0f - (float32_t)signal_a[zc_index_a-1]) / 
+                               ((float32_t)signal_a[zc_index_a] - (float32_t)signal_a[zc_index_a-1]);
+        
+        float32_t precise_zc_b = zc_index_b - 1.0f + 
+                               (2048.0f - (float32_t)signal_b[zc_index_b-1]) / 
+                               ((float32_t)signal_b[zc_index_b] - (float32_t)signal_b[zc_index_b-1]);
+        
+        // 计算相位差（归一化到-0.5~+0.5，相当于-180°~+180°）
+        float32_t phase_diff = (precise_zc_b - precise_zc_a) / (float32_t)MIXED_SAMPLE_SIZE;
+        
+        // 处理相位环绕
+        if(phase_diff > 0.5f) phase_diff -= 1.0f;
+        if(phase_diff < -0.5f) phase_diff += 1.0f;
+        
+        // 根据波形类型和相位差调整相位
+        if(type1 == WAVE_SINE && type2 == WAVE_TRIANGLE) {
+            // 信号A是正弦波，信号B是三角波
+            // 调整三角波相位
+            uint16_t phase_adjust = (uint16_t)(phase_diff * 4096.0f);
+            AD9834_SetPhase(PHASE_REG_0, phase_adjust);
+        }
+        else if(type1 == WAVE_TRIANGLE && type2 == WAVE_SINE) {
+            // 信号A是三角波，信号B是正弦波
+            // 调整正弦波相位
+            uint16_t phase_adjust = (uint16_t)(-phase_diff * 16383.0f);
+            ad9959_write_phase((AD9959_CHANNEL)1, phase_adjust);
+        }
+        
+        // 显示相位调整信息到TJC屏幕
+        char cmd_buffer[TJC_MAX_BUFFER];
+        sprintf(cmd_buffer, "t4.txt=\"Mixed Phase: %.3f\"", phase_diff);
+        TJC_SendCmd(cmd_buffer);
     }
 }
 
