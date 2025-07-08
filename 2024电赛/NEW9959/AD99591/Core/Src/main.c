@@ -36,6 +36,11 @@
 #include <stdlib.h> // For abs()
 #include "AD9834.h"
 #include "arm_math.h"
+
+// 添加函数声明，防止隐式声明警告
+extern void AD9834_Reset(void);
+extern void AD9834_EnableOutput(void);
+extern void ad9959_reset_phase(AD9959_CHANNEL channel); // 使用ad9959.c中已有的函数
 // AD9959的SPI通信是通过ad9959.c/h库处理的，无需直接访问SPI句柄
 /* USER CODE END Includes */
 
@@ -490,7 +495,7 @@ void Set_Output_Frequencies(float32_t freq1, float32_t freq2, uint8_t type1, uin
         // 使用AD9959生成正弦波 - 通道0作为主控通道
         ad9959_write_frequency(AD9959_CHANNEL_0, (uint32_t)freq1);
         // 重置通道0相位以确保稳定触发
-        ad9959_reset_phase(AD9959_CHANNEL_0);
+        ad9959_reset_phase((AD9959_CHANNEL)0);
     }
     
     // 短暂延时用于同步
@@ -738,7 +743,7 @@ void AD9959_ConfigurePLL(uint8_t multiplier)
 void AD9959_WriteRegister(uint8_t reg, uint8_t *data, uint8_t length)
 {
     // 使用ad9959库中的函数进行寄存器操作
-    // 直接调用ad9959_write_data，无需构造buffer
+    // 直接调用ad9959_write_data，无需直接操作SPI
     ad9959_write_data((AD9959_REG_ADDR)reg, length, data, 1);
     
     // 注：参数1=寄存器地址，参数2=数据长度，参数3=数据指针，参数4=是否更新IO(1=是)
@@ -785,8 +790,7 @@ void AD9959_EnableSyncMode(void)
     // 写入FR1寄存器
     AD9959_WriteRegister(AD9959_REG_FR1, fr1_data, 3);
     
-    // 应用设置
-    ad9959_io_update(); // 而不是ad9959_update();
+    ad9959_io_update(); // 使用正确的函数名
 }
 
 /**
@@ -834,7 +838,8 @@ float32_t MeasurePhaseError(void)
     
     static uint16_t signal_a[ZC_BUF_SIZE]; // 信号A采样缓冲
     static uint16_t signal_b[ZC_BUF_SIZE]; // 信号B采样缓冲
-    static uint32_t adc_values[2];         // ADC转换值[0]=通道A, [1]=通道B
+    // 移除未使用的变量
+    // static uint32_t adc_values[2];      // ADC转换值[0]=通道A, [1]=通道B
     
     // 1. 采集两个通道的信号数据
     for(uint8_t i = 0; i < ZC_BUF_SIZE; i++) {

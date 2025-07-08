@@ -2,7 +2,7 @@
  * @Author: Jinhao Zhang 2023213315@bupt.cn
  * @Date: 2025-07-07 19:59:44
  * @LastEditors: Jinhao Zhang 2023213315@bupt.cn
- * @LastEditTime: 2025-07-07 23:47:10
+ * @LastEditTime: 2025-07-08 11:46:02
  * @FilePath: \MDK-ARM\AD9834.h
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -81,13 +81,17 @@
 	
 	
 	
-/* AD9834�������� */ 
-void AD9834_Init(void);//AD9834���ų�ʼ��
+/* AD9834相关函数 */ 
+void AD9834_Init(void);//AD9834引脚初始化
  
-void AD9834_Write_16Bits(uint32_t data);//��AD9834д��16Ϊ����
+void AD9834_Write_16Bits(uint32_t data);//向AD9834写入16位数据
  
-void AD9834_SetFrequency(uint16_t reg, float fre,uint16_t type);//����Ƶ��ֵ
+void AD9834_SetFrequency(uint16_t reg, float fre, uint16_t type);//设置频率值
  
-void AD9834_SetPhase(uint16_t reg, uint16_t val);//������λֵ
+void AD9834_SetPhase(uint16_t reg, uint16_t val);//设置相位值
+
+void AD9834_Reset(void);//重置AD9834芯片
+
+void AD9834_EnableOutput(void);//使能AD9834输出
  
 #endif /* AD9834_H */ 

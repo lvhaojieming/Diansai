@@ -13,7 +13,7 @@ uint8_t RDW_DATA[4] = {0x00, 0x00, 0x00, 0x00};//default Value = 0x--------
 uint8_t FDW_DATA[4] = {0x00, 0x00, 0x00, 0x00};//default Value = 0x--------
 
 /**
-* @brief AD9959ÂÔÎ¢ÑÓÊ±
+* @brief AD9959ï¿½ï¿½Î¢ï¿½ï¿½Ê±
 * */
 static void ad9959_delay(uint32_t length) {
     length = length * 12;
@@ -21,19 +21,19 @@ static void ad9959_delay(uint32_t length) {
 }
 
 /**
-* @brief AD9959³õÊ¼»¯
+* @brief AD9959ï¿½ï¿½Ê¼ï¿½ï¿½
 * */
 void ad9959_init(void) {
     uint8_t FR1_DATA[3] = {0xD0, 0x00,
-                           0x00};//20±¶Æµ Charge pump control = 75uA FR1<23> -- VCO gain control =0Ê± system clock below 160 MHz;
+                           0x00};//20ï¿½ï¿½Æµ Charge pump control = 75uA FR1<23> -- VCO gain control =0Ê± system clock below 160 MHz;
 
     ad9959_io_init();
     ad9959_reset();
 
-    ad9959_write_data(AD9959_REG_FR1, 3, FR1_DATA, 1);//Ğ´¹¦ÄÜ¼Ä´æÆ÷1
+    ad9959_write_data(AD9959_REG_FR1, 3, FR1_DATA, 1);//Ğ´ï¿½ï¿½ï¿½Ü¼Ä´ï¿½ï¿½ï¿½1
     ad9959_write_data(AD9959_REG_FR2, 2, FR2_DATA, 1);
 
-    //Ğ´Èë³õÊ¼ÆµÂÊ
+    //Ğ´ï¿½ï¿½ï¿½Ê¼Æµï¿½ï¿½
     ad9959_write_frequency(AD9959_CHANNEL_0, 1000);
     ad9959_write_frequency(AD9959_CHANNEL_1, 1000);
     ad9959_write_frequency(AD9959_CHANNEL_2, 1000);
@@ -51,7 +51,7 @@ void ad9959_init(void) {
 }
 
 /**
-* @brief AD9959¸´Î»
+* @brief AD9959ï¿½ï¿½Î»
 * */
 void ad9959_reset(void) {
     AD9959_RESET_0;
@@ -62,7 +62,7 @@ void ad9959_reset(void) {
 }
 
 /**
-* @brief AD9959IO¿Ú³õÊ¼»¯
+* @brief AD9959IOï¿½Ú³ï¿½Ê¼ï¿½ï¿½
 * */
 void ad9959_io_init(void) {
    
@@ -81,7 +81,7 @@ void ad9959_io_init(void) {
 }
 
 /**
- * @brief AD9959¸üĞÂIO¼Ä´æÆ÷
+ * @brief AD9959ï¿½ï¿½ï¿½ï¿½IOï¿½Ä´ï¿½ï¿½ï¿½
  * */
 void ad9959_io_update(void) {
     AD9959_UPDATE_0;
@@ -92,11 +92,11 @@ void ad9959_io_update(void) {
 }
 
 /**
- * @brief Í¨¹ıSPIÏòAD9959Ğ´Êı¾İ
- * @param register_address ¼Ä´æÆ÷µØÖ·
- * @param number_of_registers Ëùº¬×Ö½ÚÊı
- * @param register_data Êı¾İÆğÊ¼µØÖ·
- * @param update ÊÇ·ñ¸üĞÂIO¼Ä´æÆ÷
+ * @brief Í¨ï¿½ï¿½SPIï¿½ï¿½AD9959Ğ´ï¿½ï¿½ï¿½ï¿½
+ * @param register_address ï¿½Ä´ï¿½ï¿½ï¿½ï¿½ï¿½Ö·
+ * @param number_of_registers ï¿½ï¿½ï¿½ï¿½ï¿½Ö½ï¿½ï¿½ï¿½
+ * @param register_data ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½Ö·
+ * @param update ï¿½Ç·ï¿½ï¿½ï¿½ï¿½IOï¿½Ä´ï¿½ï¿½ï¿½
  * */
 void ad9959_write_data(AD9959_REG_ADDR register_address, uint8_t number_of_registers, const uint8_t *register_data,
                        bool update) {
@@ -108,7 +108,7 @@ void ad9959_write_data(AD9959_REG_ADDR register_address, uint8_t number_of_regis
     assert_param(IS_AD9959_REG_ADDR(register_address));
 
     ControlValue = register_address;
-//Ğ´ÈëµØÖ·
+//Ğ´ï¿½ï¿½ï¿½Ö·
 AD9959_SCLK_0;
     AD9959_CS_0;
     for (i = 0; i < 8; i++) {
@@ -121,7 +121,7 @@ AD9959_SCLK_0;
         ControlValue <<= 1;
     }
     AD9959_SCLK_0;
-//Ğ´ÈëÊı¾İ
+//Ğ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     for (RegisterIndex = 0; RegisterIndex < number_of_registers; RegisterIndex++) {
         ValueToWrite = register_data[RegisterIndex];
         for (i = 0; i < 8; i++) {
@@ -140,9 +140,9 @@ AD9959_SCLK_0;
 }
 
 /**
- * @brief ÉèÖÃÍ¨µÀÊä³öÏàÎ»
- * @param channel Êä³öÍ¨µÀ
- * @param phase Êä³öÏàÎ» 14bit Êä³öÏàÎ»·¶Î§£º0~16383(¶ÔÓ¦½Ç¶È£º0¡ã~360¡ã)
+ * @brief ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»
+ * @param channel ï¿½ï¿½ï¿½Í¨ï¿½ï¿½
+ * @param phase ï¿½ï¿½ï¿½ï¿½ï¿½Î» 14bit ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½Î§ï¿½ï¿½0~16383(ï¿½ï¿½Ó¦ï¿½Ç¶È£ï¿½0ï¿½ï¿½~360ï¿½ï¿½)
  * */
 void ad9959_write_phase(AD9959_CHANNEL channel, uint16_t phase) {
     uint8_t cs_data = channel;
@@ -155,18 +155,18 @@ void ad9959_write_phase(AD9959_CHANNEL channel, uint16_t phase) {
 }
 
 /**
- * @brief ÉèÖÃÍ¨µÀÊä³öÆµÂÊ
- * @param channel Êä³öÍ¨µÀ
- * @param amplitude Êä³öÆµÂÊ (ÆµÂÊ·¶Î§ 1 ~ 200000000Hz)
+ * @brief ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½
+ * @param channel ï¿½ï¿½ï¿½Í¨ï¿½ï¿½
+ * @param amplitude ï¿½ï¿½ï¿½Æµï¿½ï¿½ (Æµï¿½Ê·ï¿½Î§ 1 ~ 200000000Hz)
  * */
 void ad9959_write_frequency(AD9959_CHANNEL channel, uint32_t Freq) {
-    uint8_t CFTW0_DATA[4] = {0x00, 0x00, 0x00, 0x00};    //ÖĞ¼ä±äÁ¿
+    uint8_t CFTW0_DATA[4] = {0x00, 0x00, 0x00, 0x00};    //ï¿½Ğ¼ï¿½ï¿½ï¿½ï¿½
     uint32_t frequency;
     uint8_t cs_data = channel;
 
     assert_param(IS_AD9959_CHANNEL(channel));
 
-    frequency = (uint32_t) Freq * 8.589934592;       //½«ÊäÈëÆµÂÊÒò×Ó·ÖÎªËÄ¸ö×Ö½Ú  8.589934592=(2^32)/500000000 ÆäÖĞ500M=25M*20(±¶ÆµÊı¿É±à³Ì)
+    frequency = (uint32_t) Freq * 8.589934592;       //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½Ó·ï¿½Îªï¿½Ä¸ï¿½ï¿½Ö½ï¿½  8.589934592=(2^32)/500000000 ï¿½ï¿½ï¿½ï¿½500M=25M*20(ï¿½ï¿½Æµï¿½ï¿½ï¿½É±ï¿½ï¿½)
     CFTW0_DATA[3] = (uint8_t) frequency;
     CFTW0_DATA[2] = (uint8_t) (frequency >> 8);
     CFTW0_DATA[1] = (uint8_t) (frequency >> 16);
@@ -179,9 +179,9 @@ void ad9959_write_frequency(AD9959_CHANNEL channel, uint32_t Freq) {
 }
 
 /**
- * @brief ÉèÖÃÍ¨µÀÊä³ö·ù¶È
- * @param channel Êä³öÍ¨µÀ
- * @param amplitude Êä³ö·ù¶È 10bit Êä³öÏàÎ»·¶Î§£º0~1023(¶ÔÓ¦·ù¶È£º0 ~ 530mV)
+ * @brief ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @param channel ï¿½ï¿½ï¿½Í¨ï¿½ï¿½
+ * @param amplitude ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 10bit ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½Î§ï¿½ï¿½0~1023(ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½È£ï¿½0 ~ 530mV)
  * */
 void ad9959_write_amplitude(AD9959_CHANNEL channel, uint16_t amplitude) {
     uint8_t ACR_DATA[3] = {0x00, 0x00, 0x00};//default Value = 0x--0000 Rest = 18.91/Iout
@@ -251,3 +251,13 @@ void delay_x(void)
     ;
   }
 } */
+
+/**
+ * @brief é‡ç½®é€šé“ç›¸ä½ä¸º0
+ * @param channel ç›®æ ‡é€šé“
+ */
+void ad9959_reset_phase(AD9959_CHANNEL channel)
+{
+    // ç›´æ¥è°ƒç”¨å†™ç›¸ä½å‡½æ•°ï¼Œå°†ç›¸ä½è®¾ä¸º0
+    ad9959_write_phase(channel, 0);
+}
