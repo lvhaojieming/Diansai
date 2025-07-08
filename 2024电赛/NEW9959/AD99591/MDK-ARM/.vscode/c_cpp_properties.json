@@ -100,20 +100,20 @@
         {
             "name": "AD9959",
             "includePath": [
-                "c:\\Users\\Lenovo\\Desktop\\stm32\\NEW9959\\AD99591\\Core\\Inc",
-                "c:\\Users\\Lenovo\\Desktop\\stm32\\NEW9959\\AD99591\\Drivers\\STM32F4xx_HAL_Driver\\Inc",
-                "c:\\Users\\Lenovo\\Desktop\\stm32\\NEW9959\\AD99591\\Drivers\\STM32F4xx_HAL_Driver\\Inc\\Legacy",
-                "c:\\Users\\Lenovo\\Desktop\\stm32\\NEW9959\\AD99591\\Drivers\\CMSIS\\Device\\ST\\STM32F4xx\\Include",
-                "c:\\Users\\Lenovo\\Desktop\\stm32\\NEW9959\\AD99591\\Drivers\\CMSIS\\Include",
-                "c:\\Users\\Lenovo\\Desktop\\stm32\\NEW9959\\AD99591\\AD9959",
-                "c:\\Users\\Lenovo\\Desktop\\stm32\\NEW9959\\AD99591\\Middlewares\\ST\\ARM\\DSP\\Inc",
-                "c:\\Users\\Lenovo\\Desktop\\stm32\\NEW9959\\AD99591\\MDK-ARM\\",
+                "c:\\Users\\Lenovo\\Desktop\\stm32git\\Diansai\\2024电赛\\NEW9959\\AD99591\\Core\\Inc",
+                "c:\\Users\\Lenovo\\Desktop\\stm32git\\Diansai\\2024电赛\\NEW9959\\AD99591\\Drivers\\STM32F4xx_HAL_Driver\\Inc",
+                "c:\\Users\\Lenovo\\Desktop\\stm32git\\Diansai\\2024电赛\\NEW9959\\AD99591\\Drivers\\STM32F4xx_HAL_Driver\\Inc\\Legacy",
+                "c:\\Users\\Lenovo\\Desktop\\stm32git\\Diansai\\2024电赛\\NEW9959\\AD99591\\Drivers\\CMSIS\\Device\\ST\\STM32F4xx\\Include",
+                "c:\\Users\\Lenovo\\Desktop\\stm32git\\Diansai\\2024电赛\\NEW9959\\AD99591\\Drivers\\CMSIS\\Include",
+                "c:\\Users\\Lenovo\\Desktop\\stm32git\\Diansai\\2024电赛\\NEW9959\\AD99591\\AD9959",
+                "c:\\Users\\Lenovo\\Desktop\\stm32git\\Diansai\\2024电赛\\NEW9959\\AD99591\\Middlewares\\ST\\ARM\\DSP\\Inc",
+                "c:\\Users\\Lenovo\\Desktop\\stm32git\\Diansai\\2024电赛\\NEW9959\\AD99591\\MDK-ARM\\",
                 "D:\\ARM\\ARMCC\\include",
                 "D:\\ARM\\ARMCC\\include\\rw",
-                "c:\\Users\\Lenovo\\Desktop\\stm32\\NEW9959\\AD99591\\MDK-ARM",
-                "c:\\Users\\Lenovo\\Desktop\\stm32\\NEW9959\\AD99591\\Core\\Src",
-                "c:\\Users\\Lenovo\\Desktop\\stm32\\NEW9959\\AD99591\\Drivers\\STM32F4xx_HAL_Driver\\Src",
-                "c:\\Users\\Lenovo\\Desktop\\stm32\\NEW9959\\AD99591\\Middlewares\\ST\\ARM\\DSP\\Lib"
+                "c:\\Users\\Lenovo\\Desktop\\stm32git\\Diansai\\2024电赛\\NEW9959\\AD99591\\MDK-ARM",
+                "c:\\Users\\Lenovo\\Desktop\\stm32git\\Diansai\\2024电赛\\NEW9959\\AD99591\\Core\\Src",
+                "c:\\Users\\Lenovo\\Desktop\\stm32git\\Diansai\\2024电赛\\NEW9959\\AD99591\\Drivers\\STM32F4xx_HAL_Driver\\Src",
+                "c:\\Users\\Lenovo\\Desktop\\stm32git\\Diansai\\2024电赛\\NEW9959\\AD99591\\Middlewares\\ST\\ARM\\DSP\\Lib"
             ],
             "defines": [
                 "USE_HAL_DRIVER",
