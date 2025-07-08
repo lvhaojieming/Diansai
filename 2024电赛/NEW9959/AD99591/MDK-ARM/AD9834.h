@@ -24,7 +24,7 @@
 	#define PIN_SW			0x200	//���ſ���ʹ��λ
 	
 	/* AD9834����Ƶ��75MHz */ 
-	#define AD9834_SYSTEM_COLCK     75000000UL 
+	#define AD9834_SYSTEM_CLOCK     75000000UL 
  
 	/*
 		�����ĳ��Լ����ư�����š����罫AD9834_FSYNC�Ÿĳ�PC2���ƣ�����"#define AD9834_FSYNC GPIO_Pin_2"

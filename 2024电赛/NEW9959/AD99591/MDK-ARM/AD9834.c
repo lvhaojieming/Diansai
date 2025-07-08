@@ -66,7 +66,7 @@ void AD9834_SetFrequency(uint16_t reg, float fre, uint16_t type)
 	uint16_t freqHi = reg;
 	uint16_t freqLo = reg;
  
-	unsigned long val = (268435456.0/AD9834_SYSTEM_COLCK)*fre;
+	unsigned long val = (268435456.0/AD9834_SYSTEM_CLOCK)*fre;
 	freqHi |= ((val & 0xFFFC000) >> 14);
 	freqLo |= ((val & 0x3FFF));
  

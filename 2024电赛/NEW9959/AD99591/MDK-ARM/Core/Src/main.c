@@ -8,15 +8,7 @@
 #include "arm_math.h"
 // AD9959的SPI通信是通过ad9959.c/h库处理的，无需直接访问SPI句柄
 
-// 自定义的相位重置函数，因为ad9959库中没有
-void ad9959_reset_phase(uint8_t channel)
-{
-    // 直接调用写相位函数，将相位设为0
-    ad9959_write_phase((AD9959_CHANNEL)channel, 0);
-}
-
 // 声明函数，但实现放到下面
-void ad9959_reset_phase(uint8_t channel);
 void AD9959_WriteRegister(uint8_t reg, uint8_t *data, uint8_t length);
 /* USER CODE END Includes */ 
 
@@ -36,10 +28,10 @@ void Generate_Hanning_Window(void)
  * @brief 重置AD9959通道相位为0
  * @param channel 目标通道
  */
-void ad9959_reset_phase(uint8_t channel)
+void ad9959_reset_phase(AD9959_CHANNEL channel)
 {
     // 直接调用写相位函数，将相位设为0
-    ad9959_write_phase((AD9959_CHANNEL)channel, 0);
+    ad9959_write_phase(channel, 0);
 }
 
 /**
@@ -50,16 +42,8 @@ void ad9959_reset_phase(uint8_t channel)
  */
 void AD9959_WriteRegister(uint8_t reg, uint8_t *data, uint8_t length)
 {
-    ad9959_select(); // 选择AD9959芯片
-    
-    // 发送寄存器地址
-    uint8_t instruction = reg;
-    HAL_SPI_Transmit(&hspi1, &instruction, 1, 100);
-    
-    // 发送数据
-    HAL_SPI_Transmit(&hspi1, data, length, 100);
-    
-    ad9959_deselect(); // 取消选择AD9959芯片
+    // 使用AD9959库提供的写数据函数，而不是直接使用SPI
+    ad9959_write_data((AD9959_REG_ADDR)reg, length, data, 1);
 }
 
 /**
@@ -93,13 +77,11 @@ void AD9959_ConfigurePLL(uint8_t multiplier)
 /**
   * @brief  重置所有AD9959通道的相位
   */
-void AD9959_ResetAllPhases(void)
+void AD9959_ResetUsedPhases(void)
 {
-    // 重置所有通道的相位
+    // 只重置实际使用的通道的相位
     ad9959_reset_phase(AD9959_CHANNEL_0);
     ad9959_reset_phase(AD9959_CHANNEL_1);
-    ad9959_reset_phase(AD9959_CHANNEL_2);
-    ad9959_reset_phase(AD9959_CHANNEL_3);
 }
 
 /**
@@ -107,8 +89,8 @@ void AD9959_ResetAllPhases(void)
   */
 void AD9959_SynchronizeChannels(void)
 {
-    // 先重置所有通道相位
-    AD9959_ResetAllPhases();
+    // 先重置使用的通道相位
+    AD9959_ResetUsedPhases();
     
     // 同时重置DDS核心以同步
     ad9959_reset();
@@ -133,6 +115,160 @@ void AD9959_EnableSyncMode(void)
     
     // 使用IO更新函数
     ad9959_io_update();
+}
+
+/**
+  * @brief  Send multiple commands to TJC screen in one transmission
+  * @param  cmds: Array of command strings
+  * @param  count: Number of commands
+  */
+void TJC_SendBatchCmd(const char* cmds[], uint8_t count)
+{
+    static uint8_t buffer[TJC_MAX_BUFFER]; // 静态缓冲区避免频繁栈分配
+    uint16_t offset = 0;
+    
+    // 合并所有指令
+    for (uint8_t i = 0; i < count; i++) {
+        uint16_t len = strlen(cmds[i]);
+        if (offset + len + 1 >= TJC_MAX_BUFFER) break; // 防止缓冲区溢出
+        
+        // 复制命令到缓冲区
+        memcpy(&buffer[offset], cmds[i], len);
+        offset += len;
+        
+        // 添加命令分隔符
+        buffer[offset++] = ';';
+    }
+    
+    // 发送合并后的指令
+    HAL_UART_Transmit(tjc_uart, buffer, offset, 100);
+    
+    // 只在最后发送一次结束符
+    static const uint8_t end_bytes[3] = {TJC_END_CMD, TJC_END_CMD, TJC_END_CMD};
+    HAL_UART_Transmit(tjc_uart, end_bytes, 3, 100);
+}
+
+/**
+  * @brief  Send command to TJC screen
+  * @param  cmd: Command string
+  */
+void TJC_SendCmd(const char* cmd)
+{
+    uint16_t len = strlen(cmd);
+    HAL_UART_Transmit(tjc_uart, (uint8_t*)cmd, len, 100);
+    
+    // Send end markers (3x 0xFF)
+    static const uint8_t end_bytes[3] = {TJC_END_CMD, TJC_END_CMD, TJC_END_CMD};
+    HAL_UART_Transmit(tjc_uart, end_bytes, 3, 100);
+}
+
+/**
+  * @brief  Initialize TJC screen
+  */
+void TJC_Init(void)
+{
+    HAL_Delay(100); // Wait for screen to start
+    
+    // 使用批量发送命令，减少串口通信次数
+    const char* cmds[3] = {
+        "page main",
+        "t0.txt=\"A: Wait...\"",
+        "t1.txt=\"B: Wait...\"",
+    };
+    TJC_SendBatchCmd(cmds, 3);
+    
+    HAL_Delay(50);
+    TJC_SendCmd("t3.txt=\"PLL: --\"");
+}
+
+/**
+  * @brief  Update signal info to TJC screen
+  */
+void TJC_UpdateSignalInfo(float32_t freq1, float32_t freq2, uint8_t type1, uint8_t type2)
+{
+    static char cmd_buffer[TJC_MAX_BUFFER]; // 静态缓冲区避免频繁栈分配
+    
+    // 使用静态变量缓存上次的值，只在数据变化时更新
+    static float32_t last_freq1 = -1.0f;
+    static float32_t last_freq2 = -1.0f;
+    static uint8_t last_type1 = 0xFF;
+    static uint8_t last_type2 = 0xFF;
+    static uint8_t last_pll_status = 0xFF;
+    
+    // 检查频率和波形类型是否变化
+    bool update_signal_a = (fabsf(freq1 - last_freq1) > 0.1f) || (type1 != last_type1);
+    bool update_signal_b = (fabsf(freq2 - last_freq2) > 0.1f) || (type2 != last_type2);
+    bool update_pll = (last_pll_status != pll_locked);
+    
+    // 准备要发送的命令数组
+    const char* cmds[3];
+    uint8_t cmd_count = 0;
+    
+    // 只在需要时更新信号A信息
+    if (update_signal_a) {
+        sprintf(cmd_buffer, "t0.txt=\"A: %.1fkHz (%s)\"", 
+                freq1/1000.0f, 
+                (type1 == WAVE_TRIANGLE) ? "Tri" : "Sin");
+        cmds[cmd_count++] = cmd_buffer;
+        
+        // 更新缓存
+        last_freq1 = freq1;
+        last_type1 = type1;
+    }
+    
+    // 只在需要时更新信号B信息
+    if (update_signal_b) {
+        // 使用第二个静态缓冲区，避免覆盖第一个命令
+        static char cmd_buffer2[TJC_MAX_BUFFER];
+        sprintf(cmd_buffer2, "t1.txt=\"B: %.1fkHz (%s)\"", 
+                freq2/1000.0f, 
+                (type2 == WAVE_TRIANGLE) ? "Tri" : "Sin");
+        cmds[cmd_count++] = cmd_buffer2;
+        
+        // 更新缓存
+        last_freq2 = freq2;
+        last_type2 = type2;
+    }
+    
+    // 只在PLL状态变化时更新
+    if (update_pll) {
+        // 使用第三个静态缓冲区
+        static char cmd_buffer3[TJC_MAX_BUFFER];
+        if (pll_locked && type1 == WAVE_SINE && type2 == WAVE_SINE) {
+            sprintf(cmd_buffer3, "t3.txt=\"PLL: OK\"");
+        } else {
+            sprintf(cmd_buffer3, "t3.txt=\"PLL: --\"");
+        }
+        cmds[cmd_count++] = cmd_buffer3;
+        
+        // 更新缓存
+        last_pll_status = pll_locked;
+    }
+    
+    // 如果有命令需要发送，则批量发送
+    if (cmd_count > 0) {
+        TJC_SendBatchCmd(cmds, cmd_count);
+    }
+}
+
+/**
+  * @brief  检查并调整相位
+  */
+void CheckAndAdjustPhase(void)
+{
+    // 仅在两个通道都有效时执行调整
+    if (detected_freqs[0] > 0 && detected_freqs[1] > 0 &&
+        wave_types[0] == WAVE_SINE && wave_types[1] == WAVE_SINE) {
+        
+        // 测量当前相位误差
+        current_phase_error = MeasurePhaseError();
+        
+        // 基于相位误差调整
+        AdjustPhaseBasedOnPLL(current_phase_error);
+        
+        // PLL状态更新会在TJC_UpdateSignalInfo函数中处理
+        // 不需要在这里直接更新屏幕，减少串口通信
+    }
 }
 
 /* USER CODE END 4 */ 

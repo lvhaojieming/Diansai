@@ -5,7 +5,7 @@
   * @brief          : Main program body
   * @author         : Jinhao Zhang
   * @date           : 2025-07-08
-  * @version        : 2.0(增加同频显示功能)
+  * @version        : 2.3(增加同频显示功能，增加相位跟踪功能，减少相位误差，减少串口屏显示)
   ******************************************************************************
   * @attention
   *
@@ -152,7 +152,6 @@ void AdjustMixedSignalPhase(uint8_t type1, uint8_t type2);
 void TJC_SendCmd(const char* cmd);
 void TJC_Init(void);
 void TJC_UpdateSignalInfo(float32_t freq1, float32_t freq2, uint8_t type1, uint8_t type2);
-void TJC_UpdateFFTData(void);
 
 // AD9959 PLL和同步函数
 void AD9959_ConfigurePLL(uint8_t multiplier);
@@ -278,7 +277,6 @@ int main(void)
         
         // Update TJC screen display
         TJC_UpdateSignalInfo(output_freq1, output_freq2, wave_types[0], wave_types[1]);
-        TJC_UpdateFFTData();
         
         process_flag = 0;  // Processing complete, wait for next trigger
     }
@@ -660,14 +658,9 @@ void TJC_Init(void)
     TJC_SendCmd("t0.txt=\"Waiting for signal...\"");
     TJC_SendCmd("t1.txt=\"Waiting for signal...\"");
     
-    // Clear waveform display
-    TJC_SendCmd("cle 1,0");  // Clear waveform area 1
-    TJC_SendCmd("cle 2,0");  // Clear waveform area 2
-    
-    // Add status area for PLL lock indication
+    // 为PLL锁定指示添加状态区
     TJC_SendCmd("t3.txt=\"PLL: Unlocked\"");
     
-    printf("TJC screen initialized\r\n");
 }
 
 /**
@@ -704,56 +697,6 @@ void TJC_UpdateSignalInfo(float32_t freq1, float32_t freq2, uint8_t type1, uint8
         sprintf(cmd_buffer, "t3.txt=\"PLL: Adjusting\"");
     }
     TJC_SendCmd(cmd_buffer);
-}
-
-/**
-  * @brief  Update FFT data to TJC screen
-  */
-void TJC_UpdateFFTData(void)
-{
-    char cmd_buffer[TJC_MAX_BUFFER];
-    int i, j;
-    int display_points = 100; // Screen display points
-    int step = FFT_SAMPLES / (2 * display_points);
-    
-    // Clear existing waveform
-    TJC_SendCmd("cle 1,0");
-    
-    // Draw FFT spectrum
-    // Find max value for normalization
-    float32_t max_mag = 0.1f; // Avoid division by zero
-    for (i = 0; i < FFT_SAMPLES/2; i++) {
-        if (magnitude[i] > max_mag) {
-            max_mag = magnitude[i];
-        }
-    }
-    
-    // Add waveform points using addt command
-    for (i = 0, j = 0; i < FFT_SAMPLES/2 && j < display_points; i += step, j++) {
-        // Normalize to 0-255 range
-        int y_val = (int)(magnitude[i] / max_mag * 200.0f);
-        if (y_val > 255) y_val = 255;
-        
-        // Add point to waveform
-        sprintf(cmd_buffer, "add 1,0,%d,%d", j, 255 - y_val); // Invert Y axis
-        TJC_SendCmd(cmd_buffer);
-    }
-    
-    // Mark detected frequency positions
-    uint32_t freq1_idx = (uint32_t)(detected_freqs[0] / (SAMPLING_RATE / (float32_t)FFT_SAMPLES));
-    uint32_t freq2_idx = (uint32_t)(detected_freqs[1] / (SAMPLING_RATE / (float32_t)FFT_SAMPLES));
-    
-    int x1 = freq1_idx / step;
-    int x2 = freq2_idx / step;
-    
-    if (x1 < display_points) {
-      sprintf(cmd_buffer, "line %d,50,%d,250,RED", x1, x1);
-      TJC_SendCmd(cmd_buffer);
-    }
-    if (x2 < display_points) {
-      sprintf(cmd_buffer, "line %d,50,%d,250,BLUE", x2, x2);
-      TJC_SendCmd(cmd_buffer);
-    }
 }
 
 /**
@@ -807,10 +750,6 @@ void AD9959_ResetUsedPhases(void)
     // 只重置我们实际使用的两个通道的相位
     ad9959_reset_phase((AD9959_CHANNEL)0);  // 通道0 - 信号A
     ad9959_reset_phase((AD9959_CHANNEL)1);  // 通道1 - 信号B
-    
-    // 不再重置未使用的通道2和通道3
-    // ad9959_reset_phase((AD9959_CHANNEL)2);
-    // ad9959_reset_phase((AD9959_CHANNEL)3);
 }
 
 /**
@@ -1189,10 +1128,7 @@ void AdjustMixedSignalPhase(uint8_t type1, uint8_t type2)
             ad9959_write_phase((AD9959_CHANNEL)1, phase_adjust);
         }
         
-        // 显示相位调整信息到TJC屏幕
-        char cmd_buffer[TJC_MAX_BUFFER];
-        sprintf(cmd_buffer, "t4.txt=\"Mixed Phase: %.3f\"", phase_diff);
-        TJC_SendCmd(cmd_buffer);
+        // 此处不再有任何代码
     }
 }
 
