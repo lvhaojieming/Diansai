@@ -2,7 +2,7 @@ Dependencies for Project 'AD9959', Target 'AD9959': (DO NOT MODIFY !)
 CompilerVersion: 5060960::V5.06 update 7 (build 960)::.\ARMCC
 F (startup_stm32f407xx.s)(0x686BDACB)(--cpu Cortex-M4.fp.sp -g --apcs=interwork --pd "__MICROLIB SETA 1"-I.\RTE\_AD9959-ID:\keilpackage\ARM\CMSIS\5.9.0\CMSIS\Core\Include--pd "__UVISION_VERSION SETA 542" --pd "STM32F407xx SETA 1" --pd "_RTE_ SETA 1"--list startup_stm32f407xx.lst --xref -o ad9959\startup_stm32f407xx.o --depend ad9959\startup_stm32f407xx.d)
 F (.\AD9834.c)(0x686BEC9B)(--c99 -c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ../AD9959 -I ../Middlewares/ST/ARM/DSP/Inc -I ../MDK-ARM/-I.\RTE\_AD9959-ID:\keilpackage\ARM\CMSIS\5.9.0\CMSIS\Core\Include-D__UVISION_VERSION="542" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx-o ad9959\ad9834.o --omf_browse ad9959\ad9834.crf --depend ad9959\ad9834.d)
-I (AD9834.h)(0x686BECAD)
+I (AD9834.h)(0x686BECC2)
 I (../Core/Inc/gpio.h)(0x64CCC828)
 I (../Core/Inc/main.h)(0x681E12A8)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h)(0x686BD33B)
@@ -38,8 +38,8 @@ I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h)(0x686BD33B)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h)(0x686BD33B)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h)(0x686BD33B)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h)(0x686BD33B)
-F (.\AD9834.h)(0x686BECAD)()
-F (../Core/Src/main.c)(0x686BEC89)(--c99 -c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ../AD9959 -I ../Middlewares/ST/ARM/DSP/Inc -I ../MDK-ARM/-I.\RTE\_AD9959-ID:\keilpackage\ARM\CMSIS\5.9.0\CMSIS\Core\Include-D__UVISION_VERSION="542" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx-o ad9959\main.o --omf_browse ad9959\main.crf --depend ad9959\main.d)
+F (.\AD9834.h)(0x686BECC2)()
+F (../Core/Src/main.c)(0x686BEE51)(--c99 -c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ../AD9959 -I ../Middlewares/ST/ARM/DSP/Inc -I ../MDK-ARM/-I.\RTE\_AD9959-ID:\keilpackage\ARM\CMSIS\5.9.0\CMSIS\Core\Include-D__UVISION_VERSION="542" -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx-o ad9959\main.o --omf_browse ad9959\main.crf --depend ad9959\main.d)
 I (../Core/Inc/main.h)(0x681E12A8)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h)(0x686BD33B)
 I (../Core/Inc/stm32f4xx_hal_conf.h)(0x686BCB47)
@@ -85,7 +85,7 @@ I (D:\ARM\ARMCC\include\math.h)(0x60252378)
 I (D:\ARM\ARMCC\include\stdio.h)(0x60252374)
 I (D:\ARM\ARMCC\include\string.h)(0x6025237E)
 I (D:\ARM\ARMCC\include\stdlib.h)(0x60252374)
-I (../MDK-ARM/AD9834.h)(0x686BECAD)
+I (../MDK-ARM/AD9834.h)(0x686BECC2)
 I (../Middlewares/ST/ARM/DSP/Inc/arm_math.h)(0x67E93AA1)
 I (D:\ARM\ARMCC\include\float.h)(0x6025237E)
 I (D:\ARM\ARMCC\include\limits.h)(0x60252376)

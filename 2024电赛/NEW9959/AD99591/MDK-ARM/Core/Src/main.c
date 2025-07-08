@@ -272,3 +272,121 @@ void CheckAndAdjustPhase(void)
 }
 
 /* USER CODE END 4 */ 
+
+int main(void)
+{
+  /* MCU Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
+
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_DMA_Init();
+  MX_ADC1_Init();
+  MX_TIM2_Init();
+  MX_USART3_UART_Init();
+
+  /* USER CODE BEGIN 2 */
+  
+  // 测试AD9959功能函数
+  printf("开始测试AD9959功能...\r\n");
+  
+  // 1. 测试AD9959初始化
+  printf("1. 测试AD9959初始化...\r\n");
+  ad9959_init();
+  HAL_Delay(100);
+  
+  // 2. 测试AD9959重置
+  printf("2. 测试AD9959重置...\r\n");
+  ad9959_reset();
+  HAL_Delay(100);
+  
+  // 3. 测试AD9959写入频率
+  printf("3. 测试AD9959写入频率 (通道0, 1000Hz)...\r\n");
+  ad9959_write_frequency(0, 1000);
+  HAL_Delay(200);
+  
+  // 4. 测试AD9959重置相位
+  printf("4. 测试AD9959重置相位 (通道0)...\r\n");
+  ad9959_reset_phase(0);
+  HAL_Delay(100);
+  
+  // 5. 测试AD9959写入相位
+  printf("5. 测试AD9959写入相位 (通道0, 相位8192)...\r\n");
+  ad9959_write_phase(0, 8192);
+  HAL_Delay(200);
+  
+  // 6. 测试AD9959写入幅度
+  printf("6. 测试AD9959写入幅度 (通道0, 幅度512)...\r\n");
+  ad9959_write_amplitude(0, 512);
+  HAL_Delay(200);
+  
+  // 7. 测试AD9959 IO更新
+  printf("7. 测试AD9959 IO更新...\r\n");
+  ad9959_io_update();
+  HAL_Delay(100);
+  
+  // 8. 测试AD9959写入数据
+  printf("8. 测试AD9959写入数据...\r\n");
+  uint8_t test_data[] = {0x00, 0x01, 0x02, 0x03};
+  ad9959_write_data(0x00, 4, test_data, 1);
+  HAL_Delay(100);
+  
+  // 测试AD9834功能函数
+  printf("开始测试AD9834功能...\r\n");
+  
+  // 9. 测试AD9834初始化
+  printf("9. 测试AD9834初始化...\r\n");
+  AD9834_Init();
+  HAL_Delay(100);
+  
+  // 10. 测试AD9834重置
+  printf("10. 测试AD9834重置...\r\n");
+  AD9834_Reset();
+  HAL_Delay(100);
+  
+  // 11. 测试AD9834设置频率
+  printf("11. 测试AD9834设置频率 (1000Hz, 三角波)...\r\n");
+  AD9834_SetFrequency(AD9834_FREQ0_REG, 1000, AD9834_TRIANGLE_WAVE);
+  HAL_Delay(200);
+  
+  // 12. 测试AD9834设置相位
+  printf("12. 测试AD9834设置相位 (相位2048)...\r\n");
+  AD9834_SetPhase(AD9834_PHASE0_REG, 2048);
+  HAL_Delay(200);
+  
+  // 13. 测试AD9834使能输出
+  printf("13. 测试AD9834使能输出...\r\n");
+  AD9834_EnableOutput();
+  HAL_Delay(100);
+  
+  // 14. 测试AD9834写入16位数据
+  printf("14. 测试AD9834写入16位数据...\r\n");
+  AD9834_Write_16Bits(0x1234);
+  HAL_Delay(100);
+  
+  printf("所有功能测试完成！\r\n");
+  
+  // 初始化TJC屏幕
+  TJC_Init();
+  
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  while (1)
+  {
+    // 简单的测试循环，每5秒输出一次状态
+    printf("系统运行中... AD9959和AD9834功能测试完成\r\n");
+    HAL_Delay(5000);
+    
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
+  }
+  /* USER CODE END 3 */
+} 

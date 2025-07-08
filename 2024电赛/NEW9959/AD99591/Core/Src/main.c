@@ -217,42 +217,16 @@ int main(void)
   // Initialize AD9959
   ad9959_init();
   
-  // 配置AD9959内部PLL
-  AD9959_ConfigurePLL(AD9959_PLL_MULTIPLIER);
-  
-  // 启用AD9959同步模式以获得稳定的相位关系
-  AD9959_EnableSyncMode();
-  
-  // 重置所有相位以保持一致
-  AD9959_ResetUsedPhases();
-  
   // Set initial amplitude
-  ad9959_write_amplitude(AD9959_CHANNEL_0, 1023); // Set max amplitude
-  ad9959_write_amplitude(AD9959_CHANNEL_1, 1023);
+  ad9959_write_frequency(AD9959_CHANNEL_0, 10000);
+  ad9959_write_frequency(AD9959_CHANNEL_1, 10000);
+  ad9959_write_amplitude(AD9959_CHANNEL_0, 400); // Set max amplitude
+  ad9959_write_amplitude(AD9959_CHANNEL_1, 400);
+  ad9959_write_phase(AD9959_CHANNEL_0, 0);
+  ad9959_write_phase(AD9959_CHANNEL_1, 0);
 
-  // Generate Hanning window
-  Generate_Hanning_Window();
-
-  // Initialize FFT
-  arm_rfft_fast_init_f32(&fft_inst, FFT_SAMPLES);
-
-  // 配置软件PLL
-  ConfigureSoftwarePLL();
-
-  // Enable UART receive interrupt
-  HAL_UART_Receive_IT(&huart3, uart_rx_buffer, 1);
-
-  // Start TIM2 to trigger ADC sampling
-  HAL_TIM_Base_Start(&htim2);
-  
-  // Start ADC1 DMA transfer
-  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_SIZE);
-
-  // Initialize TJC screen
-  TJC_Init();
-
-  // 存储当前时间用于相位检查
-  last_phase_check_time = HAL_GetTick();
+  AD9834_Init();
+  AD9834_SetFrequency(FREQ_REG_0, 10000, WAVE_SINE);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -262,39 +236,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    if (adc_conv_complete_flag && process_flag) {
-        adc_conv_complete_flag = 0; // Clear flag
-        Process_ADC_Data();         // Process collected data
-        Detect_Wave_Type();         // Detect wave type
-        
-        // Output 5kHz multiple frequencies
-        float32_t output_freq1 = Find_Nearest_Multiple(detected_freqs[0], FREQ_STEP_5K);
-        float32_t output_freq2 = Find_Nearest_Multiple(detected_freqs[1], FREQ_STEP_5K);
-        
-        // Set output frequencies and amplitudes
-        Set_Output_Frequencies(output_freq1, output_freq2, wave_types[0], wave_types[1]);
-        Set_Output_Amplitudes();
-        
-        // Update TJC screen display
-        TJC_UpdateSignalInfo(output_freq1, output_freq2, wave_types[0], wave_types[1]);
-        
-        process_flag = 0;  // Processing complete, wait for next trigger
-    }
-    
-    if (adc_conv_complete_flag && !process_flag) {
-        // If no processing flag, continue data collection
-        adc_conv_complete_flag = 0;
-        HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_SIZE);
-    }
-    
-    // 定期检查并调整相位
-    uint32_t current_time = HAL_GetTick();
-    if (current_time - last_phase_check_time >= PHASE_CHECK_INTERVAL) {
-        CheckAndAdjustPhase();
-        last_phase_check_time = current_time;
-    }
-    
-    HAL_Delay(10); // Short delay to avoid high CPU usage
   }
   /* USER CODE END 3 */
 }
